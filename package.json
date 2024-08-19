@@ -1,13 +1,11 @@
 {
-  "name": "RateNGo",
   "dependencies": {
-    "wasp": "file:.wasp/out/sdk/wasp",
-    "react": "^18.2.0"
-  },
-  "devDependencies": {
-    "typescript": "^5.1.0",
-    "vite": "^4.3.9",
-    "@types/react": "^18.0.37",
-    "prisma": "4.16.2"
+    "apos-to-lex-form": "^1.0.5",
+    "natural": "^8.0.1",
+    "qrcode.react": "^3.1.0",
+    "react-qr-reader": "^3.0.0-beta-1",
+    "react-router-dom": "^6.26.1",
+    "spelling-corrector": "^3.0.0",
+    "stopword": "^3.1.1"
   }
 }
