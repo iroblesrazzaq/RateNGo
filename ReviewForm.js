@@ -1,41 +1,77 @@
-import React, { useState } from 'react';
-import { useParams, useHistory } from 'react-router-dom';
+// src/components/ReviewForm.js
+import React, { useState, useEffect } from 'react';
+import { useParams } from 'react-router-dom';
+import axios from 'axios';
 
 function ReviewForm() {
-  const { restaurantId } = useParams();
-  const history = useHistory();
   const [rating, setRating] = useState(0);
-  const [comment, setComment] = useState('');
+  const [review, setReview] = useState('');
+  const [restaurant, setRestaurant] = useState(null);
+  const [submitted, setSubmitted] = useState(false);
+  const [coupon, setCoupon] = useState(null);
+  const { restaurantId } = useParams();
 
-  const handleSubmit = (e) => {
+  useEffect(() => {
+    const fetchRestaurant = async () => {
+      try {
+        const response = await axios.get(`/api/restaurants/${restaurantId}`);
+        setRestaurant(response.data);
+      } catch (error) {
+        console.error('Error fetching restaurant:', error);
+      }
+    };
+    fetchRestaurant();
+  }, [restaurantId]);
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    // Here you would typically send the review data to your backend
-    console.log({ restaurantId, rating, comment });
-    // After submitting, redirect to the coupon page
-    history.push('/coupon');
+    try {
+      const response = await axios.post('/api/reviews', { restaurantId, rating, review });
+      const couponResponse = await axios.post('/api/coupons/generate', { userId: 'user-id' }); // Replace with actual user ID
+      setSubmitted(true);
+      setCoupon(couponResponse.data);
+    } catch (error) {
+      console.error('Error submitting review:', error);
+    }
   };
 
+  if (submitted) {
+    return (
+      <div className="review-submitted">
+        <h2>Thank you for your review!</h2>
+        {coupon && (
+          <div className="coupon">
+            <h3>Your Coupon</h3>
+            <p>Code: {coupon.code}</p>
+            <p>Discount: {coupon.discount}%</p>
+            <p>Valid until: {new Date(coupon.expiresAt).toLocaleDateString()}</p>
+          </div>
+        )}
+      </div>
+    );
+  }
+
   return (
-    <div>
-      <h2>Review Restaurant</h2>
+    <div className="review-form">
+      <h2>Review {restaurant?.name}</h2>
       <form onSubmit={handleSubmit}>
-        <div>
-          <label>Rating: </label>
-          <input
-            type="number"
-            min="1"
-            max="5"
-            value={rating}
-            onChange={(e) => setRating(e.target.value)}
-          />
+        <div className="rating">
+          {[1, 2, 3, 4, 5].map((star) => (
+            <span
+              key={star}
+              onClick={() => setRating(star)}
+              style={{ cursor: 'pointer', color: star <= rating ? 'gold' : 'gray' }}
+            >
+              ★
+            </span>
+          ))}
         </div>
-        <div>
-          <label>Comment: </label>
-          <textarea
-            value={comment}
-            onChange={(e) => setComment(e.target.value)}
-          />
-        </div>
+        <textarea
+          value={review}
+          onChange={(e) => setReview(e.target.value)}
+          placeholder="Write your review here..."
+          required
+        />
         <button type="submit">Submit Review</button>
       </form>
     </div>

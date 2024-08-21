@@ -1,11 +1,12 @@
+// src/App.js
 import React from 'react';
 import { BrowserRouter as Router, Route, Switch } from 'react-router-dom';
+import QRScanner from './components/QRScanner';
+import ReviewForm from './components/ReviewForm';
+import RestaurantDashboard from './components/RestaurantDashboard';
+import CouponSystem from './components/CouponSystem';
 import Header from './components/Header';
-import Home from './pages/Home';
-import QRScanner from './pages/QRScanner';
-import ReviewForm from './pages/ReviewForm';
-import RestaurantDashboard from './pages/RestaurantDashboard';
-import CouponPage from './pages/CouponPage';
+import Footer from './components/Footer';
 
 function App() {
   return (
@@ -13,12 +14,12 @@ function App() {
       <div className="App">
         <Header />
         <Switch>
-          <Route exact path="/" component={Home} />
-          <Route path="/scan" component={QRScanner} />
+          <Route exact path="/" component={QRScanner} />
           <Route path="/review/:restaurantId" component={ReviewForm} />
-          <Route path="/dashboard" component={RestaurantDashboard} />
-          <Route path="/coupon" component={CouponPage} />
+          <Route path="/dashboard/:restaurantId" component={RestaurantDashboard} />
+          <Route path="/coupons" component={CouponSystem} />
         </Switch>
+        <Footer />
       </div>
     </Router>
   );
