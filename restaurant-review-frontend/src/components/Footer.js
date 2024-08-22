@@ -1,23 +1,18 @@
-// src/components/Header.js
-import React, { useContext } from 'react';
+import React from 'react';
 import { Link } from 'react-router-dom';
-import { AuthContext } from '../context/AuthContext';
+import { useAuth } from '../context/AuthContext';
 
-function Header() {
-  const { user, logout } = useContext(AuthContext);
+function Footer() {
+  const { user, logout } = useAuth();
 
   return (
-    <header>
+    <footer>
       <nav>
         <ul>
           <li><Link to="/">Home</Link></li>
           {user ? (
             <>
               <li><Link to="/profile">Profile</Link></li>
-              <li><Link to="/scan">Scan QR</Link></li>
-              {user.role === 'restaurant_owner' && (
-                <li><Link to="/dashboard">Dashboard</Link></li>
-              )}
               <li><button onClick={logout}>Logout</button></li>
             </>
           ) : (
@@ -28,8 +23,8 @@ function Header() {
           )}
         </ul>
       </nav>
-    </header>
+    </footer>
   );
 }
 
-export default Header;
+export default Footer;
