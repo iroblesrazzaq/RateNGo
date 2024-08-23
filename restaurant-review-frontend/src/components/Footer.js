@@ -1,35 +1,11 @@
-// src/components/Header.js
-import React, { useContext } from 'react';
-import { Link } from 'react-router-dom';
-import { AuthContext } from '../context/AuthContext';
+import React from 'react';
 
-function Header() {
-  const { user, logout } = useContext(AuthContext);
+const Footer = () => (
+  <footer className="bg-gray-800 text-white py-4">
+    <div className="container mx-auto px-4 text-center">
+      <p>&copy; 2024 RestauReview. All rights reserved.</p>
+    </div>
+  </footer>
+);
 
-  return (
-    <header>
-      <nav>
-        <ul>
-          <li><Link to="/">Home</Link></li>
-          {user ? (
-            <>
-              <li><Link to="/profile">Profile</Link></li>
-              <li><Link to="/scan">Scan QR</Link></li>
-              {user.role === 'restaurant_owner' && (
-                <li><Link to="/dashboard">Dashboard</Link></li>
-              )}
-              <li><button onClick={logout}>Logout</button></li>
-            </>
-          ) : (
-            <>
-              <li><Link to="/login">Login</Link></li>
-              <li><Link to="/register">Register</Link></li>
-            </>
-          )}
-        </ul>
-      </nav>
-    </header>
-  );
-}
-
-export default Header;
+export default Footer;
