@@ -1,83 +1,94 @@
 // src/components/ReviewForm.js
 import React, { useState, useEffect } from 'react';
-import { useParams } from 'react-router-dom';
-import axios from 'axios';
+import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import api from '../utils/api';
 
-
-function ReviewForm() {
+const ReviewForm = () => {
   const [rating, setRating] = useState(0);
   const [review, setReview] = useState('');
   const [restaurant, setRestaurant] = useState(null);
-  const [submitted, setSubmitted] = useState(false);
-  const [coupon, setCoupon] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
   const { restaurantId } = useParams();
+  const navigate = useNavigate();
+  const { user } = useAuth();
 
   useEffect(() => {
     const fetchRestaurant = async () => {
       try {
-        const response = await axios.get(`/api/restaurants/${restaurantId}`);
+        setLoading(true);
+        const response = await api.get(`/restaurants/${restaurantId}`);
         setRestaurant(response.data);
-      } catch (error) {
-        console.error('Error fetching restaurant:', error);
+      } catch (err) {
+        setError('Failed to fetch restaurant information.');
+        console.error(err);
+      } finally {
+        setLoading(false);
       }
     };
+
     fetchRestaurant();
   }, [restaurantId]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (!user) {
+      navigate('/login', { state: { from: `/review/${restaurantId}` } });
+      return;
+    }
     try {
-      const response = await axios.post('/api/reviews', { restaurantId, rating, review });
-      const couponResponse = await axios.post('/api/coupons/generate', { userId: 'user-id' }); // Replace with actual user ID
-      setSubmitted(true);
-      setCoupon(couponResponse.data);
-    } catch (error) {
-      console.error('Error submitting review:', error);
+      await api.post('/reviews', { restaurantId, rating, text: review });
+      navigate(`/restaurant/${restaurantId}`, { state: { message: 'Review submitted successfully!' } });
+    } catch (err) {
+      setError('Failed to submit review. Please try again.');
+      console.error(err);
     }
   };
 
-  if (submitted) {
-    return (
-      <div className="review-submitted">
-        <h2>Thank you for your review!</h2>
-        {coupon && (
-          <div className="coupon">
-            <h3>Your Coupon</h3>
-            <p>Code: {coupon.code}</p>
-            <p>Discount: {coupon.discount}%</p>
-            <p>Valid until: {new Date(coupon.expiresAt).toLocaleDateString()}</p>
-          </div>
-        )}
-      </div>
-    );
-  }
+  if (loading) return <div className="text-center">Loading...</div>;
+  if (error) return <div className="text-center text-red-500">{error}</div>;
 
   return (
-    <div className="review-form">
-      <h2>Review {restaurant?.name}</h2>
-      <form onSubmit={handleSubmit}>
-        <div className="rating">
-          {[1, 2, 3, 4, 5].map((star) => (
-            <span
-              key={star}
-              onClick={() => setRating(star)}
-              style={{ cursor: 'pointer', color: star <= rating ? 'gold' : 'gray' }}
-            >
-              ★
-            </span>
-          ))}
+    <div className="max-w-2xl mx-auto bg-white p-8 rounded-lg shadow-md">
+      <h2 className="text-3xl font-bold mb-6 text-center text-gray-800">Review {restaurant?.name}</h2>
+      <form onSubmit={handleSubmit} className="space-y-6">
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">Rating</label>
+          <div className="flex justify-center space-x-2">
+            {[1, 2, 3, 4, 5].map((star) => (
+              <button
+                key={star}
+                type="button"
+                onClick={() => setRating(star)}
+                className={`text-3xl ${star <= rating ? 'text-yellow-400' : 'text-gray-300'}`}
+              >
+                ★
+              </button>
+            ))}
+          </div>
         </div>
-        <textarea
-          value={review}
-          onChange={(e) => setReview(e.target.value)}
-          placeholder="Write your review here..."
-          required
-        />
-        <button type="submit">Submit Review</button>
+        <div>
+          <label htmlFor="review" className="block text-sm font-medium text-gray-700 mb-1">Your Review</label>
+          <textarea
+            id="review"
+            rows="4"
+            value={review}
+            onChange={(e) => setReview(e.target.value)}
+            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
+            placeholder="Write your review here..."
+            required
+          />
+        </div>
+        <button
+          type="submit"
+          className="w-full bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded transition duration-300"
+        >
+          Submit Review
+        </button>
       </form>
     </div>
   );
-}
+};
 
 export default ReviewForm;
