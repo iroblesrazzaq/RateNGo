@@ -16,11 +16,12 @@ const Register = () => {
     e.preventDefault();
     try {
       const response = await api.post('/users/register', { username, email, password });
+      console.log('Registration response:', response.data); // Add this line for debugging
       login(response.data);
       navigate('/');
     } catch (err) {
+      console.error('Registration error:', err.response?.data || err.message); // Improved error logging
       setError('Registration failed. Please try again.');
-      console.error(err);
     }
   };
 

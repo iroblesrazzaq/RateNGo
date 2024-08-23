@@ -13,8 +13,8 @@ const Login = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const response = await api.post('/auth/login', { email, password });
-      login(response.data);
+        const response = await api.post('/users/login', { email, password });
+        login(response.data);
       navigate('/');
     } catch (err) {
       setError('Invalid email or password');
