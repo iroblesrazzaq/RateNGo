@@ -9,6 +9,8 @@ import CouponSystem from './components/CouponSystem';
 import Login from './components/Login';
 import Register from './components/Register';
 import PrivateRoute from './components/PrivateRoute';
+import RestaurantRegister from './components/RestaurantRegister'; // Add this line
+
 
 function App() {
   return (
@@ -36,6 +38,15 @@ function App() {
             />
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
+            <Route path="/restaurant-register" element={<RestaurantRegister />} />
+            <Route 
+                path="/restaurant-dashboard" 
+                element={
+                <PrivateRoute>
+                    <RestaurantDashboard />
+                </PrivateRoute>
+                } 
+          />
           </Routes>
         </Layout>
       </Router>

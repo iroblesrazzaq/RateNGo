@@ -2,20 +2,23 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import api from '../utils/api';
+import UserTypeToggle from './UserTypeToggle';  // Adjust the path if necessary
+
 
 const Login = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const [userType, setUserType] = useState('customer');
   const navigate = useNavigate();
   const { login } = useAuth();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-        const response = await api.post('/users/login', { email, password });
-        login(response.data);
-      navigate('/');
+      const response = await api.post('/users/login', { email, password, role: userType });
+      login(response.data);
+      navigate(userType === 'restaurant' ? '/restaurant-dashboard' : '/');
     } catch (err) {
       setError('Invalid email or password');
     }
@@ -23,8 +26,9 @@ const Login = () => {
 
   return (
     <div className="max-w-md mx-auto mt-8">
+      <h2 className="text-2xl mb-6 text-center font-bold">Login</h2>
+      <UserTypeToggle userType={userType} setUserType={setUserType} />
       <form onSubmit={handleSubmit} className="bg-white shadow-md rounded px-8 pt-6 pb-8 mb-4">
-        <h2 className="text-2xl mb-6 text-center font-bold">Login</h2>
         {error && <p className="text-red-500 text-xs italic mb-4">{error}</p>}
         <div className="mb-4">
           <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="email">
