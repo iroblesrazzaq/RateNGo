@@ -1,120 +1,94 @@
-// src/components/RestaurantDashboard.js
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import api from '../utils/api';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 
-const RestaurantDashboard = () => {
+function RestaurantDashboard() {
   const [restaurant, setRestaurant] = useState(null);
   const [reviews, setReviews] = useState([]);
-  const [metrics, setMetrics] = useState({});
+  const [metrics, setMetrics] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
   const { restaurantId } = useParams();
 
   useEffect(() => {
-    const fetchDashboardData = async () => {
+    const fetchData = async () => {
       try {
-        setLoading(true);
         const [restaurantData, reviewsData, metricsData] = await Promise.all([
           api.get(`/restaurants/${restaurantId}`),
           api.get(`/reviews/restaurant/${restaurantId}`),
-          api.get(`/restaurants/${restaurantId}/metrics`)
+          api.get(`/reviews/summary/${restaurantId}`)
         ]);
         setRestaurant(restaurantData.data);
         setReviews(reviewsData.data);
         setMetrics(metricsData.data);
         setLoading(false);
-      } catch (err) {
-        setError('Failed to fetch dashboard data');
+      } catch (error) {
+        console.error('Error fetching dashboard data:', error);
         setLoading(false);
-        console.error(err);
       }
     };
-
-    fetchDashboardData();
+    fetchData();
   }, [restaurantId]);
 
-  if (loading) return <div className="text-center mt-8">Loading dashboard...</div>;
-  if (error) return <div className="text-center mt-8 text-red-500">{error}</div>;
+  if (loading) {
+    return <div>Loading...</div>;
+  }
 
-  const sentimentColors = {
-    positive: 'text-green-500',
-    neutral: 'text-yellow-500',
-    negative: 'text-red-500'
-  };
+  const ratingDistribution = [
+    { name: '1 Star', count: metrics.ratingDistribution[1] || 0 },
+    { name: '2 Stars', count: metrics.ratingDistribution[2] || 0 },
+    { name: '3 Stars', count: metrics.ratingDistribution[3] || 0 },
+    { name: '4 Stars', count: metrics.ratingDistribution[4] || 0 },
+    { name: '5 Stars', count: metrics.ratingDistribution[5] || 0 },
+  ];
 
   return (
-    <div className="container mx-auto px-4 py-8">
+    <div className="restaurant-dashboard p-6">
       <h1 className="text-3xl font-bold mb-6">{restaurant.name} Dashboard</h1>
       
-      {/* Overall Metrics */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-        <div className="bg-white p-4 rounded-lg shadow">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+        <div className="bg-white p-4 rounded shadow">
           <h2 className="text-xl font-semibold mb-2">Average Rating</h2>
-          <p className="text-4xl font-bold text-blue-500">{metrics.averageRating.toFixed(1)}</p>
+          <p className="text-4xl font-bold text-yellow-500">{metrics.averageRating.toFixed(1)}</p>
         </div>
-        <div className="bg-white p-4 rounded-lg shadow">
+        <div className="bg-white p-4 rounded shadow">
           <h2 className="text-xl font-semibold mb-2">Total Reviews</h2>
-          <p className="text-4xl font-bold text-green-500">{metrics.totalReviews}</p>
+          <p className="text-4xl font-bold text-blue-500">{metrics.totalReviews}</p>
         </div>
-        <div className="bg-white p-4 rounded-lg shadow">
-          <h2 className="text-xl font-semibold mb-2">Sentiment Distribution</h2>
-          <div className="flex justify-between">
-            <span className={sentimentColors.positive}>{metrics.sentimentDistribution.positive}% Positive</span>
-            <span className={sentimentColors.neutral}>{metrics.sentimentDistribution.neutral}% Neutral</span>
-            <span className={sentimentColors.negative}>{metrics.sentimentDistribution.negative}% Negative</span>
-          </div>
+        <div className="bg-white p-4 rounded shadow">
+          <h2 className="text-xl font-semibold mb-2">Sentiment</h2>
+          <p className="text-4xl font-bold text-green-500">{(metrics.positiveSentiment * 100).toFixed(1)}% Positive</p>
         </div>
       </div>
 
-      {/* Rating Trend Chart */}
-      <div className="bg-white p-4 rounded-lg shadow mb-8">
-        <h2 className="text-xl font-semibold mb-4">Rating Trend</h2>
+      <div className="bg-white p-4 rounded shadow mb-6">
+        <h2 className="text-xl font-semibold mb-4">Rating Distribution</h2>
         <ResponsiveContainer width="100%" height={300}>
-          <LineChart data={metrics.ratingTrend}>
+          <BarChart data={ratingDistribution}>
             <CartesianGrid strokeDasharray="3 3" />
-            <XAxis dataKey="date" />
-            <YAxis domain={[0, 5]} />
+            <XAxis dataKey="name" />
+            <YAxis />
             <Tooltip />
             <Legend />
-            <Line type="monotone" dataKey="rating" stroke="#8884d8" />
-          </LineChart>
+            <Bar dataKey="count" fill="#8884d8" />
+          </BarChart>
         </ResponsiveContainer>
       </div>
 
-      {/* Recent Reviews */}
-      <div className="bg-white p-4 rounded-lg shadow">
+      <div className="bg-white p-4 rounded shadow">
         <h2 className="text-xl font-semibold mb-4">Recent Reviews</h2>
-        <div className="space-y-4">
-          {reviews.slice(0, 5).map((review) => (
-            <div key={review._id} className="border-b pb-4">
-              <div className="flex justify-between items-center mb-2">
-                <span className="font-semibold">Rating: {review.rating}/5</span>
-                <span className={sentimentColors[review.sentiment]}>
-                  {review.sentiment.charAt(0).toUpperCase() + review.sentiment.slice(1)}
-                </span>
-              </div>
-              <p className="text-gray-700">{review.text}</p>
-              <p className="text-sm text-gray-500 mt-2">
-                {new Date(review.createdAt).toLocaleDateString()}
-              </p>
+        {reviews.slice(0, 5).map((review) => (
+          <div key={review._id} className="mb-4 pb-4 border-b">
+            <div className="flex justify-between items-center mb-2">
+              <span className="font-semibold">Rating: {review.rating}/5</span>
+              <span className="text-sm text-gray-500">{new Date(review.createdAt).toLocaleDateString()}</span>
             </div>
-          ))}
-        </div>
-      </div>
-
-      {/* Key Insights */}
-      <div className="mt-8 bg-white p-4 rounded-lg shadow">
-        <h2 className="text-xl font-semibold mb-4">Key Insights</h2>
-        <ul className="list-disc pl-5 space-y-2">
-          {metrics.keyInsights.map((insight, index) => (
-            <li key={index} className="text-gray-700">{insight}</li>
-          ))}
-        </ul>
+            <p className="text-gray-700">{review.text}</p>
+          </div>
+        ))}
       </div>
     </div>
   );
-};
+}
 
 export default RestaurantDashboard;
